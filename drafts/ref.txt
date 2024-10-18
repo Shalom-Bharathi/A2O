@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Environmental Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: "Arial", sans-serif;
+        background: linear-gradient(135deg, #1a202c, #2d3748);
+        color: #e2e8f0;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .header {
+        text-align: center;
+        margin-bottom: 40px;
+      }
+      .header h1 {
+        font-size: 3em;
+        margin-bottom: 10px;
+        animation: glow 2s ease-in-out infinite alternate;
+      }
+      @keyframes glow {
+        from {
+          text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #0ff, 0 0 20px #0ff,
+            0 0 35px #0ff, 0 0 40px #0ff, 0 0 50px #0ff, 0 0 75px #0ff;
+        }
+        to {
+          text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #0ff,
+            0 0 40px #0ff, 0 0 70px #0ff, 0 0 80px #0ff, 0 0 100px #0ff,
+            0 0 150px #0ff;
+        }
+      }
+      .card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 40px;
+      }
+      .card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        transition: all 0.3s ease;
+      }
+      .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.5);
+      }
+      .card h2 {
+        font-size: 1.5em;
+        margin-bottom: 10px;
+      }
+      .card .value {
+        font-size: 2.5em;
+        font-weight: bold;
+        margin-bottom: 10px;
+      }
+      .card .change {
+        font-size: 1em;
+      }
+      .chart-container {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 40px;
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+      }
+      .chart-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 20px;
+      }
+      canvas {
+        max-width: 100%;
+        height: 300px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+      th,
+      td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      th {
+        background-color: rgba(255, 255, 255, 0.1);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header class="header">
+        <h1>Environmental Dashboard</h1>
+        <p>Real-time monitoring of environmental factors</p>
+      </header>
+
+      <div class="card-grid">
+        <div class="card">
+          <h2>Carbon Conversion</h2>
+          <div class="value" id="carbonValue">0.00 kg/hour</div>
+          <div class="change" id="carbonChange">0.00%</div>
+        </div>
+        <div class="card">
+          <h2>Temperature</h2>
+          <div class="value" id="tempValue">0.00 °C</div>
+          <div class="change" id="tempChange">0.00%</div>
+        </div>
+        <div class="card">
+          <h2>Humidity</h2>
+          <div class="value" id="humidityValue">0.00 %</div>
+          <div class="change" id="humidityChange">0.00%</div>
+        </div>
+        <div class="card">
+          <h2>Sunlight</h2>
+          <div class="value" id="sunlightValue">0.00 %</div>
+          <div class="change" id="sunlightChange">0.00%</div>
+        </div>
+      </div>
+
+      <div class="chart-container">
+        <h2>Environmental Factors Overview</h2>
+        <canvas id="overviewChart"></canvas>
+      </div>
+
+      <div class="chart-grid">
+        <div class="chart-container">
+          <h2>Carbon Conversion Trend</h2>
+          <canvas id="carbonChart"></canvas>
+        </div>
+        <div class="chart-container">
+          <h2>Temperature Distribution</h2>
+          <canvas id="tempChart"></canvas>
+        </div>
+        <div class="chart-container">
+          <h2>Humidity Levels</h2>
+          <canvas id="humidityChart"></canvas>
+        </div>
+        <div class="chart-container">
+          <h2>Sunlight Intensity</h2>
+          <canvas id="sunlightChart"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-container">
+        <h2>Recent Readings</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Carbon Conversion (kg/hour)</th>
+              <th>Temperature (°C)</th>
+              <th>Humidity (%)</th>
+              <th>Sunlight (%)</th>
+            </tr>
+          </thead>
+          <tbody id="recentReadings"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <script>
+      // Mock data
+      const mockData = [
+        {
+          timestamp: "00:00",
+          carbonConversion: 2.5,
+          temperature: 22,
+          humidity: 45,
+          sunlight: 0,
+        },
+        {
+          timestamp: "03:00",
+          carbonConversion: 2.7,
+          temperature: 21,
+          humidity: 47,
+          sunlight: 0,
+        },
+        {
+          timestamp: "06:00",
+          carbonConversion: 3.1,
+          temperature: 20,
+          humidity: 50,
+          sunlight: 10,
+        },
+        {
+          timestamp: "09:00",
+          carbonConversion: 3.4,
+          temperature: 23,
+          humidity: 48,
+          sunlight: 60,
+        },
+        {
+          timestamp: "12:00",
+          carbonConversion: 3.2,
+          temperature: 25,
+          humidity: 45,
+          sunlight: 100,
+        },
+        {
+          timestamp: "15:00",
+          carbonConversion: 2.9,
+          temperature: 26,
+          humidity: 43,
+          sunlight: 80,
+        },
+        {
+          timestamp: "18:00",
+          carbonConversion: 2.6,
+          temperature: 24,
+          humidity: 46,
+          sunlight: 30,
+        },
+        {
+          timestamp: "21:00",
+          carbonConversion: 2.4,
+          temperature: 23,
+          humidity: 48,
+          sunlight: 0,
+        },
+      ];
+
+      function animateValue(id, start, end, duration) {
+        const obj = document.getElementById(id);
+        let current = start;
+        const range = end - start;
+        const increment = end > start ? 1 : -1;
+        const stepTime = Math.abs(Math.floor(duration / range));
+        const timer = setInterval(() => {
+          current += increment;
+          obj.textContent =
+            current.toFixed(2) +
+            (id.includes("Value") ? (id.includes("temp") ? " °C" : " %") : "%");
+          if (current === end) {
+            clearInterval(timer);
+          }
+        }, stepTime);
+      }
+
+      function updateDashboard() {
+        const latest = mockData[mockData.length - 1];
+        const previous = mockData[mockData.length - 2];
+
+        animateValue("carbonValue", 0, latest.carbonConversion, 1000);
+        animateValue("tempValue", 0, latest.temperature, 1000);
+        animateValue("humidityValue", 0, latest.humidity, 1000);
+        animateValue("sunlightValue", 0, latest.sunlight, 1000);
+
+        const calculateChange = (current, previous) =>
+          ((current - previous) / previous) * 100;
+
+        animateValue(
+          "carbonChange",
+          0,
+          calculateChange(latest.carbonConversion, previous.carbonConversion),
+          1000
+        );
+        animateValue(
+          "tempChange",
+          0,
+          calculateChange(latest.temperature, previous.temperature),
+          1000
+        );
+        animateValue(
+          "humidityChange",
+          0,
+          calculateChange(latest.humidity, previous.humidity),
+          1000
+        );
+        animateValue(
+          "sunlightChange",
+          0,
+          calculateChange(latest.sunlight, previous.sunlight),
+          1000
+        );
+      }
+
+      function createChart(ctx, type, labels, datasets) {
+        return new Chart(ctx, {
+          type: type,
+          data: { labels, datasets },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: {
+              duration: 2000,
+              easing: "easeInOutQuart",
+            },
+            scales: {
+              y: { beginAtZero: true },
+            },
+          },
+        });
+      }
+
+      function createCharts() {
+        const labels = mockData.map((d) => d.timestamp);
+
+        const chartConfigs = [
+          {
+            id: "overviewChart",
+            type: "line",
+            datasets: [
+              {
+                label: "Carbon Conversion",
+                data: mockData.map((d) => d.carbonConversion),
+                borderColor: "rgba(75, 192, 192, 1)",
+              },
+              {
+                label: "Temperature",
+                data: mockData.map((d) => d.temperature),
+                borderColor: "rgba(255, 99, 132, 1)",
+              },
+              {
+                label: "Humidity",
+                data: mockData.map((d) => d.humidity),
+                borderColor: "rgba(54, 162, 235, 1)",
+              },
+              {
+                label: "Sunlight",
+                data: mockData.map((d) => d.sunlight),
+                borderColor: "rgba(255, 206, 86, 1)",
+              },
+            ],
+          },
+          {
+            id: "carbonChart",
+            type: "line",
+            datasets: [
+              {
+                label: "Carbon Conversion",
+                data: mockData.map((d) => d.carbonConversion),
+                borderColor: "rgba(75, 192, 192, 1)",
+                fill: true,
+              },
+            ],
+          },
+          {
+            id: "tempChart",
+            type: "bar",
+            datasets: [
+              {
+                label: "Temperature",
+                data: mockData.map((d) => d.temperature),
+                backgroundColor: "rgba(255, 99, 132, 0.7)",
+              },
+            ],
+          },
+          {
+            id: "humidityChart",
+            type: "line",
+            datasets: [
+              {
+                label: "Humidity",
+                data: mockData.map((d) => d.humidity),
+                borderColor: "rgba(54, 162, 235, 1)",
+                fill: true,
+              },
+            ],
+          },
+          {
+            id: "sunlightChart",
+            type: "bar",
+            datasets: [
+              {
+                label: "Sunlight",
+                data: mockData.map((d) => d.sunlight),
+                backgroundColor: "rgba(255, 206, 86, 0.7)",
+              },
+            ],
+          },
+        ];
+
+        chartConfigs.forEach((config) => {
+          createChart(
+            document.getElementById(config.id).getContext("2d"),
+            config.type,
+            labels,
+            config.datasets
+          );
+        });
+      }
+
+      function populateRecentReadings() {
+        const tbody = document.getElementById("recentReadings");
+        tbody.innerHTML = "";
+        mockData
+          .slice(-5)
+          .reverse()
+          .forEach((reading) => {
+            const row = tbody.insertRow();
+            Object.values(reading).forEach((value) => {
+              const cell = row.insertCell();
+              cell.textContent =
+                typeof value === "number" ? value.toFixed(2) : value;
+            });
+          });
+      }
+
+      function initDashboard() {
+        updateDashboard();
+        createCharts();
+        populateRecentReadings();
+
+        gsap.from(".card", {
+          duration: 1,
+          y: 50,
+          opacity: 0,
+          stagger: 0.2,
+          ease: "power3.out",
+        });
+
+        gsap.from(".chart-container", {
+          duration: 1,
+          scale: 0.9,
+          opacity: 0,
+          stagger: 0.2,
+          ease: "power3.out",
+        });
+
+        gsap.to(".value", {
+          duration: 2,
+          color: "#4fd1c5",
+          repeat: -1,
+          yoyo: true,
+          ease: "power1.inOut",
+        });
+      }
+
+      window.addEventListener("load", initDashboard);
+    </script>
+  </body>
+</html>

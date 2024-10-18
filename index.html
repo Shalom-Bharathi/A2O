@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Plant Conversion Monitor</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --chart-1: #1a8754;
+        --chart-2: #dc3545;
+        --chart-3: #0d6efd;
+        --chart-4: #ffc107;
+      }
+      .dark {
+        background-color: #1a202c;
+        color: #e2e8f0;
+      }
+      .fade-in {
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+      }
+      .fade-in.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      .hover-scale {
+        transition: transform 0.3s ease-in-out;
+      }
+      .hover-scale:hover {
+        transform: scale(1.005);
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+    </style>
+  </head>
+  <body class="min-h-screen bg-gray-100 dark:bg-gray-900">
+    <div id="root" class="flex h-screen">
+      <nav
+        class="bg-green-800 text-white w-64 space-y-6 py-7 px-2 absolute inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition duration-200 ease-in-out"
+      >
+        <a href="#" class="text-white flex items-center space-x-2 px-4">
+          <svg
+            class="w-8 h-8"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+            />
+          </svg>
+          <span class="text-2xl font-extrabold">PlantTrack</span>
+        </a>
+
+        <nav>
+          <a
+            href="#"
+            class="block py-2.5 px-4 rounded transition duration-200 hover:bg-green-700 hover:text-white"
+          >
+            Dashboard
+          </a>
+          <a
+            href="#"
+            class="block py-2.5 px-4 rounded transition duration-200 hover:bg-green-700 hover:text-white"
+          >
+            Plant Analytics
+          </a>
+          <a
+            href="#"
+            class="block py-2.5 px-4 rounded transition duration-200 hover:bg-green-700 hover:text-white"
+          >
+            Conversion Reports
+          </a>
+          <a
+            href="#"
+            class="block py-2.5 px-4 rounded transition duration-200 hover:bg-green-700 hover:text-white"
+          >
+            Settings
+          </a>
+        </nav>
+      </nav>
+
+      <!-- Main Content -->
+      <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- Top bar -->
+        <header class="bg-white shadow-lg">
+          <div
+            class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex justify-between items-center"
+          >
+            <h1 class="text-3xl font-bold text-gray-900">
+              Plant Conversion Monitor
+            </h1>
+            <button id="theme-toggle" class="p-2 rounded-md hover:bg-gray-100">
+              <svg
+                class="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+                ></path>
+              </svg>
+            </button>
+          </div>
+        </header>
+
+        <!-- Page Content -->
+        <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-200">
+          <div class="container mx-auto px-6 py-8">
+            <div
+              class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+              id="data-cards"
+            ></div>
+
+            <div class="mt-8 fade-in">
+              <div
+                class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow hover-scale"
+              >
+                <h2 class="text-xl font-bold mb-4">
+                  Carbon Conversion Overview
+                </h2>
+                <div class="h-[400px]">
+                  <canvas id="lineChart"></canvas>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-8 fade-in">
+              <div
+                class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow hover-scale"
+              >
+                <h2 class="text-xl font-bold mb-4">Weekly Plant Performance</h2>
+                <div class="h-[400px]">
+                  <canvas id="areaChart"></canvas>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-8 fade-in">
+              <div
+                class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow hover-scale"
+              >
+                <h2 class="text-xl font-bold mb-4">
+                  Daily Environmental Factors
+                </h2>
+                <div class="h-[400px]">
+                  <canvas id="barChart"></canvas>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+              <div
+                class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow hover-scale fade-in"
+              >
+                <h2 class="text-xl font-bold mb-4">
+                  Current Plant Distribution
+                </h2>
+                <div class="h-[300px]">
+                  <canvas id="pieChart"></canvas>
+                </div>
+              </div>
+
+              <div
+                class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow hover-scale fade-in"
+              >
+                <h2 class="text-xl font-bold mb-4">Plant Health Factors</h2>
+                <div class="h-[300px]">
+                  <canvas id="radarChart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+    <script>
+      // Your web app's Firebase configuration
+      const firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+        databaseURL: "https://YOUR_PROJECT_ID.firebaseio.com",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_PROJECT_ID.appspot.com",
+        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+        appId: "YOUR_APP_ID",
+      };
+
+      // Initialize Firebase
+      const app = firebase.initializeApp(firebaseConfig);
+      const database = firebase.database();
+
+      let mockData = [];
+      let dailyAverages = [];
+
+      function fetchData() {
+        database
+          .ref("mockData")
+          .once("value")
+          .then((snapshot) => {
+            mockData = snapshot.val();
+            initDashboard();
+          });
+
+        database
+          .ref("dailyAverages")
+          .once("value")
+          .then((snapshot) => {
+            dailyAverages = snapshot.val();
+            initCharts();
+          });
+      }
+
+      const COLORS = ["#4CAF50", "#2196F3", "#FFC107", "#FF5722"];
+
+      function createDataCard(title, value, unit, icon, color, change) {
+        const card = document.createElement("div");
+        card.className =
+          "bg-white dark:bg-gray-800 p-4 rounded-lg shadow hover-scale fade-in";
+        card.innerHTML = `
+          <div class="flex justify-between items-center mb-2">
+            <h3 class="text-sm font-medium">${title}</h3>
+            <span class="text-${color}-500">${icon}</span>
+          </div>
+          <div class="text-2xl font-bold">
+            ${value.toFixed(2)} ${unit}
+          </div>
+          <p class="text-xs ${change >= 0 ? "text-green-500" : "text-red-500"}">
+            ${change >= 0 ? "▲" : "▼"} ${Math.abs(change).toFixed(2)}%
+          </p>
+        `;
+        return card;
+      }
+
+      function initCharts() {
+        const latestReading = mockData[mockData.length - 1];
+        const previousReading = mockData[mockData.length - 2];
+
+        new Chart(document.getElementById("lineChart"), {
+          type: "line",
+          data: {
+            labels: mockData.map((d) => d.timestamp),
+            datasets: [
+              {
+                label: "Carbon Conversion",
+                data: mockData.map((d) => d.carbonConversion),
+                borderColor: "rgb(75, 192, 192)",
+                tension: 0.1,
+                fill: false,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { position: "top" },
+              title: {
+                display: true,
+                text: "Carbon Conversion Rate Over Time",
+              },
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                title: { display: true, text: "kg CO2 / hour" },
+              },
+              x: { title: { display: true, text: "Time" } },
+            },
+            animation: {
+              duration: 2000,
+              easing: "easeInOutQuart",
+            },
+          },
+        });
+
+        new Chart(document.getElementById("areaChart"), {
+          type: "line",
+          data: {
+            labels: dailyAverages.map((d) => d.date),
+            datasets: [
+              {
+                label: "Carbon Conversion",
+                data: dailyAverages.map((d) => d.carbonConversion),
+                fill: true,
+                backgroundColor: "rgba(75, 192, 192, 0.2)",
+                borderColor: "rgb(75, 192, 192)",
+                tension: 0.1,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { position: "top" },
+              title: {
+                display: true,
+                text: "Weekly Carbon Conversion Performance",
+              },
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                title: { display: true, text: "Average kg CO2 / hour" },
+              },
+              x: { title: { display: true, text: "Day of Week" } },
+            },
+            animation: {
+              duration: 2000,
+              easing: "easeInOutQuart",
+            },
+          },
+        });
+
+        new Chart(document.getElementById("barChart"), {
+          type: "bar",
+          data: {
+            labels: dailyAverages.map((d) => d.date),
+            datasets: [
+              {
+                label: "Temperature",
+                data: dailyAverages.map((d) => d.temperature),
+                backgroundColor: "rgba(255, 99, 132, 0.6)",
+              },
+              {
+                label: "Humidity",
+                data: dailyAverages.map((d) => d.humidity),
+                backgroundColor: "rgba(54, 162, 235, 0.6)",
+              },
+              {
+                label: "Sunlight",
+                data: dailyAverages.map((d) => d.sunlight),
+                backgroundColor: "rgba(255, 206, 86, 0.6)",
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { position: "top" },
+              title: { display: true, text: "Daily Environmental Factors" },
+            },
+            scales: {
+              y: { beginAtZero: true, title: { display: true, text: "Value" } },
+              x: { title: { display: true, text: "Day of Week" } },
+            },
+            animation: {
+              duration: 2000,
+              easing: "easeInOutQuart",
+            },
+          },
+        });
+
+        new Chart(document.getElementById("pieChart"), {
+          type: "pie",
+          data: {
+            labels: ["Healthy", "Stressed", "Recovering", "New Growth"],
+            datasets: [
+              {
+                data: [65, 10, 15, 10],
+                backgroundColor: COLORS,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { position: "top" },
+              title: { display: true, text: "Plant Health Distribution" },
+            },
+            animation: {
+              duration: 2000,
+              easing: "easeInOutQuart",
+            },
+          },
+        });
+
+        new Chart(document.getElementById("radarChart"), {
+          type: "radar",
+          data: {
+            labels: [
+              "Carbon Conversion",
+              "Temperature",
+              "Humidity",
+              "Sunlight",
+            ],
+            datasets: [
+              {
+                label: "Latest Reading",
+                data: [
+                  latestReading.carbonConversion,
+                  latestReading.temperature,
+                  latestReading.humidity,
+                  latestReading.sunlight,
+                ],
+                fill: true,
+                backgroundColor: "rgba(255, 99, 132, 0.2)",
+                borderColor: "rgb(255, 99, 132)",
+                pointBackgroundColor: "rgb(255, 99, 132)",
+                pointBorderColor: "#fff",
+                pointHoverBackgroundColor: "#fff",
+                pointHoverBorderColor: "rgb(255, 99, 132)",
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+          },
+        });
+      }
+
+      function initDashboard() {
+        const dataCardsContainer = document.getElementById("data-cards");
+
+        const latestReading = mockData[mockData.length - 1];
+        const previousReading = mockData[mockData.length - 2];
+
+        const cardData = [
+          {
+            title: "Carbon Conversion",
+            value: latestReading.carbonConversion,
+            unit: "kg/hour",
+            icon: "🍃",
+            color: "green",
+            change:
+              ((latestReading.carbonConversion -
+                previousReading.carbonConversion) /
+                previousReading.carbonConversion) *
+              100,
+          },
+          {
+            title: "Temperature",
+            value: latestReading.temperature,
+            unit: "°C",
+            icon: "🌡️",
+            color: "red",
+            change:
+              ((latestReading.temperature - previousReading.temperature) /
+                previousReading.temperature) *
+              100,
+          },
+          {
+            title: "Humidity",
+            value: latestReading.humidity,
+            unit: "%",
+            icon: "💧",
+            color: "blue",
+            change:
+              ((latestReading.humidity - previousReading.humidity) /
+                previousReading.humidity) *
+              100,
+          },
+          {
+            title: "Sunlight",
+            value: latestReading.sunlight,
+            unit: "%",
+            icon: "☀️",
+            color: "yellow",
+            change:
+              ((latestReading.sunlight - previousReading.sunlight) /
+                previousReading.sunlight) *
+              100,
+          },
+        ];
+
+        cardData.forEach((data) => {
+          const card = createDataCard(
+            data.title,
+            data.value,
+            data.unit,
+            data.icon,
+            data.color,
+            data.change
+          );
+          dataCardsContainer.appendChild(card);
+        });
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        fetchData();
+        // Ensure fade-in effect is applied
+        const fadeIns = document.querySelectorAll(".fade-in");
+        fadeIns.forEach((el) => {
+          el.classList.add("visible");
+        });
+      });
+    </script>
+  </body>
+</html>
